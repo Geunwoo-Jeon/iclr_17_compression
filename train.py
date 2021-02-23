@@ -155,7 +155,7 @@ def train(epoch, global_step):
 
 def testKodak(step):
     with torch.no_grad():
-        test_dataset = TestKodakDataset(data_dir='/data1/liujiaheng/data/compression/kodak')
+        test_dataset = TestKodakDataset(data_dir='C:/Kodak')
         test_loader = DataLoader(dataset=test_dataset, shuffle=False, batch_size=1, pin_memory=True, num_workers=1)
         net.eval()
         sumBpp = 0
@@ -221,6 +221,9 @@ if __name__ == "__main__":
     if args.pretrain != '':
         logger.info("loading model:{}".format(args.pretrain))
         global_step = load_model(model, args.pretrain)
+        # quantization to int8
+        quant_model = torch.quantization.quantize_dynamic(model, dtype=torch.qint8)
+        # quant_model = torch.quantization.quantize_dynamic(model, {torch.nn.Conv2d}, dtype=torch.qint8)
     net = model.cuda()
     net = torch.nn.DataParallel(net, list(range(gpu_num)))
     parameters = net.parameters()
@@ -231,7 +234,7 @@ if __name__ == "__main__":
     # save_model(model, 0)
     global train_loader
     tb_logger = SummaryWriter(os.path.join(save_path, 'events'))
-    train_data_dir = '/data1/liujiaheng/data/compression/Flick_patch'
+    train_data_dir = 'C:/compression_data'
     train_dataset = Datasets(train_data_dir, image_size)
     train_loader = DataLoader(dataset=train_dataset,
                               batch_size=batch_size,
