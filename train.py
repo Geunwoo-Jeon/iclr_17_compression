@@ -94,6 +94,7 @@ def train(epoch, global_step):
         global_step += 1
         # print("debug", torch.max(input), torch.min(input))
         input = input.cuda()
+        model.Encoder.binarization()
         clipped_recon_image, mse_loss, bpp = net(input)
         # print("debug", clipped_recon_image.shape, " ", mse_loss.shape, " ", bpp.shape)
         # print("debug", mse_loss, " ", bpp_feature, " ", bpp_z, " ", bpp)
@@ -108,6 +109,7 @@ def train(epoch, global_step):
                     if param.grad is not None:
                         param.grad.data.clamp_(-grad_clip, grad_clip)
         clip_gradient(optimizer, 5)
+        model.Encoder.updateGrad()
         optimizer.step()
         # model_time += (time.time()-start_time)
         if (global_step % cal_step) == 0:
@@ -221,9 +223,11 @@ if __name__ == "__main__":
     if args.pretrain != '':
         logger.info("loading model:{}".format(args.pretrain))
         global_step = load_model(model, args.pretrain)
-        # quantization to int8
-        quant_model = torch.quantization.quantize_dynamic(model, dtype=torch.qint8)
-        # quant_model = torch.quantization.quantize_dynamic(model, {torch.nn.Conv2d}, dtype=torch.qint8)
+        # binarization of encoder.conv2 module
+        weight = model.Encoder.conv2.weight.data
+        n = weight[0][0][0].nelement()
+        s = weight.size()
+        model.Encoder.conv2.weight.data = weight.sum(3, keepdim=True).div(n).expand(s)
     net = model.cuda()
     net = torch.nn.DataParallel(net, list(range(gpu_num)))
     parameters = net.parameters()
