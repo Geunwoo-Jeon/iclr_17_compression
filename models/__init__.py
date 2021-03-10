@@ -1,9 +1,10 @@
 from .GDN import GDN
-from .analysis import Analysis_net
-from .analysis_prior import Analysis_prior_net
-from .synthesis import Synthesis_net
-from .synthesis_prior import Synthesis_prior_net
 from .bitEstimator import BitEstimator
 from .ms_ssim_torch import ms_ssim, ssim
 from .analysis_17 import Analysis_net_17
 from .synthesis_17 import Synthesis_net_17
+from .binary_encoder import BinaryEncoder
+from .expand_binary_encoder import expandBinaryEncoder
+from .expand_encoder import expandEncoder
+from .bin_enc_in_hid import BinaryInputEncoder
+from .bin_enc_out_hid import BinaryOutputEncoder

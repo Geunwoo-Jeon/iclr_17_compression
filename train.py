@@ -94,7 +94,7 @@ def train(epoch, global_step):
         global_step += 1
         # print("debug", torch.max(input), torch.min(input))
         input = input.cuda()
-        ### model.Encoder.binarization()
+        model.Encoder.binarization()
         clipped_recon_image, mse_loss, bpp = net(input)
         # print("debug", clipped_recon_image.shape, " ", mse_loss.shape, " ", bpp.shape)
         # print("debug", mse_loss, " ", bpp_feature, " ", bpp_z, " ", bpp)
@@ -109,7 +109,7 @@ def train(epoch, global_step):
                     if param.grad is not None:
                         param.grad.data.clamp_(-grad_clip, grad_clip)
         clip_gradient(optimizer, 5)
-        ### model.Encoder.updateGrad()
+        model.Encoder.updateGrad()
         optimizer.step()
         # model_time += (time.time()-start_time)
         if (global_step % cal_step) == 0:

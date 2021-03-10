@@ -13,9 +13,6 @@ import torch.nn.init as init
 import logging
 from torch.nn.parameter import Parameter
 from models import *
-from models import binary_encoder
-from models import expand_binary_encoder
-from models import expand_encoder
 
 def save_model(model, iter, name):
     torch.save(model.state_dict(), os.path.join(name, "iter_{}.pth.tar".format(iter)))
@@ -40,7 +37,7 @@ def load_model(model, f):
 class ImageCompressor(nn.Module):
     def __init__(self, out_channel_N=128):
         super(ImageCompressor, self).__init__()
-        self.Encoder = expand_encoder.expandEncoder(out_channel_N=out_channel_N)
+        self.Encoder = BinaryOutputEncoder(out_channel_N=out_channel_N)
         self.Decoder = Synthesis_net_17(out_channel_N=out_channel_N)
         self.bitEstimator = BitEstimator(channel=out_channel_N)
         self.out_channel_N = out_channel_N
