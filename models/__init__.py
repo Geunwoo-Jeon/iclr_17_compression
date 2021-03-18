@@ -8,3 +8,4 @@ from .expand_binary_encoder import expandBinaryEncoder
 from .expand_encoder import expandEncoder
 from .bin_enc_in_hid import BinaryInputEncoder
 from .bin_enc_out_hid import BinaryOutputEncoder
+from .binary_decoder import BinaryDecoder
