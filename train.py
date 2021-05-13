@@ -9,6 +9,8 @@ import time
 from datasets import Datasets, TestKodakDataset
 from tensorboardX import SummaryWriter
 from Meter import AverageMeter
+from torchvision.utils import save_image
+
 torch.backends.cudnn.enabled = True
 # gpu_num = 4
 gpu_num = torch.cuda.device_count()
@@ -34,7 +36,7 @@ parser.add_argument('-n', '--name', default='',
 parser.add_argument('-p', '--pretrain', default = '',
         help='load pretrain model')
 parser.add_argument('--test', action='store_true')
-parser.add_argument('--config', dest='config', required=False,
+parser.add_argument('--config', dest='config', required=False, default='examples/example/config.json',
         help = 'hyperparameter in json format')
 parser.add_argument('--seed', default=234, type=int, help='seed for random functions, and network initialization')
 
@@ -96,8 +98,8 @@ def train(epoch, global_step):
         input = input.cuda()
 
         '''Binary part'''
-        model.Encoder.binarization()
-        model.Decoder.binarization()
+        # model.Encoder.binarization()
+        # model.Decoder.binarization()
 
         clipped_recon_image, mse_loss, bpp = net(input)
         # print("debug", clipped_recon_image.shape, " ", mse_loss.shape, " ", bpp.shape)
@@ -105,6 +107,8 @@ def train(epoch, global_step):
         distribution_loss = bpp
         distortion = mse_loss
         rd_loss = train_lambda * distortion + distribution_loss
+        if rd_loss.item() > 10 :
+            logger.info(f'mse={distortion.item()}, bpp= {distribution_loss.item()}')
         optimizer.zero_grad()
         rd_loss.backward()
         def clip_gradient(optimizer, grad_clip):
@@ -115,8 +119,8 @@ def train(epoch, global_step):
         clip_gradient(optimizer, 5)
 
         '''Binary part'''
-        model.Encoder.updateGrad()
-        model.Decoder.updateGrad()
+        # model.Encoder.updateGrad()
+        # model.Decoder.updateGrad()
 
         optimizer.step()
         # model_time += (time.time()-start_time)
@@ -187,6 +191,8 @@ def testKodak(step):
             sumMsssimDB += msssimDB
             sumMsssim += msssim
             logger.info("Bpp:{:.6f}, PSNR:{:.6f}, MS-SSIM:{:.6f}, MS-SSIM-DB:{:.6f}".format(bpp, psnr, msssim, msssimDB))
+            if args.test:
+                save_image(clipped_recon_image[0], f'result_images/img{batch_idx}.png')
             cnt += 1
 
         logger.info("Test on Kodak dataset: model-{}".format(step))
@@ -227,15 +233,15 @@ if __name__ == "__main__":
     logger.info(open(args.config).read())
     parse_config(args.config)
 
-    model = ImageCompressor()
+    model = BinaryGMMCompressor()
     if args.pretrain != '':
         logger.info("loading model:{}".format(args.pretrain))
         global_step = load_model(model, args.pretrain)
-        # binarization of encoder.conv2 module
-        weight = model.Encoder.conv2.weight.data
-        n = weight[0][0][0].nelement()
-        s = weight.size()
-        model.Encoder.conv2.weight.data = weight.sum(3, keepdim=True).div(n).expand(s)
+        # # binarization of encoder.conv2 module
+        # weight = model.Encoder.conv2.weight.data
+        # n = weight[0][0][0].nelement()
+        # s = weight.size()
+        # model.Encoder.conv2.weight.data = weight.sum(3, keepdim=True).div(n).expand(s)
     net = model.cuda()
     net = torch.nn.DataParallel(net, list(range(gpu_num)))
     parameters = net.parameters()

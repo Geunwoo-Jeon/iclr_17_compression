@@ -9,3 +9,5 @@ from .expand_encoder import expandEncoder
 from .bin_enc_in_hid import BinaryInputEncoder
 from .bin_enc_out_hid import BinaryOutputEncoder
 from .binary_decoder import BinaryDecoder
+from .PS_decoder import PSDecoder
+from .PS_binary_dec import PS_BinaryDecoder
